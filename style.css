@@ -371,6 +371,20 @@ body {
   gap: 5rem; align-items: start;
 }
 
+.about-image-wrap {
+  width: 140px; height: 140px;
+  border-radius: var(--radius-pill);
+  background: var(--yellow-fade);
+  overflow: hidden; margin-bottom: 2rem;
+  border: 1px solid var(--gray-border);
+}
+.about-profile-img {
+  width: 100%; height: 100%;
+  object-fit: cover; object-position: center;
+  mix-blend-mode: multiply;
+  filter: contrast(1.05) grayscale(20%);
+}
+
 .about-headline {
   font-family: var(--font-display);
   font-size: clamp(2rem, 3.2vw, 2.9rem);
