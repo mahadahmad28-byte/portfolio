@@ -1,36 +1,50 @@
 /* ═══════════════════════════════════════════════
-   Portfolio JavaScript
-   - Nav scroll effect
-   - Scroll-reveal animations
-   - Skill bar animation (IntersectionObserver)
-   - Contact form handler
-   - Active nav link highlighting
-   - Typewriter effect on hero
+   Portfolio JavaScript — Baskara Edition
+   1. Nav: Active link tracking (pill highlight)
+   2. Scroll Reveal (IntersectionObserver)
+   3. Skill bar animation
+   4. Contact form handler
+   5. Terminal animation
+   6. Page load fade-in
 ═══════════════════════════════════════════════ */
 
 'use strict';
 
-/* ── 1. Nav: Scrolled state ──────────────────── */
-const nav = document.getElementById('nav');
-window.addEventListener('scroll', () => {
-  nav.classList.toggle('scrolled', window.scrollY > 30);
-}, { passive: true });
+
+/* ── 1. Nav: Active link tracking ────────────── */
+const navLinks = document.querySelectorAll('.nav-link');
+
+const sectionObserver = new IntersectionObserver(
+  (entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const id = entry.target.id;
+        navLinks.forEach(a => {
+          const isActive = a.getAttribute('href') === `#${id}`;
+          a.classList.toggle('active', isActive);
+        });
+      }
+    });
+  },
+  { threshold: 0.35 }
+);
+
+document.querySelectorAll('section[id]').forEach(s => sectionObserver.observe(s));
 
 
 /* ── 2. Scroll Reveal ────────────────────────── */
 const revealEls = document.querySelectorAll(
-  '.section-label, .section-title, .section-sub, ' +
-  '.about-text p, .about-card, ' +
+  '.section-eyebrow, .section-title, .section-sub, ' +
+  '.about-headline, .about-body > p, .about-card, ' +
   '.project-card, ' +
   '.skill-group, ' +
   '.timeline-item, ' +
   '.contact-card, .contact-form-wrap, ' +
-  '.hero-stats .stat'
+  '.cta-left, .cta-right'
 );
 
-revealEls.forEach((el, i) => {
+revealEls.forEach((el) => {
   el.classList.add('reveal');
-  // Stagger siblings
   const siblings = [...el.parentElement.children].filter(c => c.classList.contains('reveal'));
   const idx = siblings.indexOf(el);
   if (idx > 0 && idx <= 3) el.classList.add(`reveal-delay-${idx}`);
@@ -45,7 +59,7 @@ const revealObserver = new IntersectionObserver(
       }
     });
   },
-  { threshold: 0.12, rootMargin: '0px 0px -60px 0px' }
+  { threshold: 0.1, rootMargin: '0px 0px -50px 0px' }
 );
 
 revealEls.forEach(el => revealObserver.observe(el));
@@ -69,69 +83,38 @@ const skillObserver = new IntersectionObserver(
 skillFills.forEach(fill => skillObserver.observe(fill));
 
 
-/* ── 4. Active Nav Link on Scroll ────────────── */
-const sections = document.querySelectorAll('section[id]');
-const navLinks = document.querySelectorAll('.nav-links a');
-
-const sectionObserver = new IntersectionObserver(
-  (entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        const id = entry.target.id;
-        navLinks.forEach(a => {
-          a.style.color = a.getAttribute('href') === `#${id}`
-            ? 'var(--text)'
-            : '';
-        });
-      }
-    });
-  },
-  { threshold: 0.35 }
-);
-
-sections.forEach(s => sectionObserver.observe(s));
-
-
-/* ── 5. Hero Typewriter for Role ─────────────── */
+/* ── 4. Hero role typewriter ─────────────────── */
 const ROLES = [
   'Computer Science Student',
   'AI Tools Builder',
   'Security Researcher',
   'Full Stack Developer',
-  'Open Source Contributor',
+  'Flutter Developer',
 ];
 
+// Role tag is now static in hero; typewriter only runs if element exists
 const roleEl = document.querySelector('.role-tag');
 if (roleEl) {
-  let roleIdx = 0;
-  let charIdx = 0;
-  let deleting = false;
-  let paused = false;
+  let roleIdx = 0, charIdx = 0, deleting = false, paused = false;
 
   function typeRole() {
     const current = ROLES[roleIdx];
     if (paused) { paused = false; setTimeout(typeRole, 1500); return; }
-
     if (!deleting) {
       roleEl.textContent = current.slice(0, ++charIdx);
       if (charIdx === current.length) { deleting = true; paused = true; }
-      setTimeout(typeRole, 80);
+      setTimeout(typeRole, 75);
     } else {
       roleEl.textContent = current.slice(0, --charIdx);
-      if (charIdx === 0) {
-        deleting = false;
-        roleIdx = (roleIdx + 1) % ROLES.length;
-      }
-      setTimeout(typeRole, 40);
+      if (charIdx === 0) { deleting = false; roleIdx = (roleIdx + 1) % ROLES.length; }
+      setTimeout(typeRole, 38);
     }
   }
-
-  // Start after a short delay
   setTimeout(typeRole, 1800);
 }
 
 
-/* ── 6. Contact Form ─────────────────────────── */
+/* ── 5. Contact Form ─────────────────────────── */
 function handleContactForm(e) {
   e.preventDefault();
   const form    = document.getElementById('contact-form');
@@ -142,95 +125,64 @@ function handleContactForm(e) {
   const subject = document.getElementById('contact-subject').value.trim();
   const msg     = document.getElementById('contact-msg').value.trim();
 
-  // Simple validation
   if (!name || !email || !msg) {
     note.textContent = 'Please fill in all required fields.';
     note.className = 'form-note error';
     return;
   }
 
-  // Build mailto link as fallback (no server needed)
   const mailSubject = encodeURIComponent(subject || `Portfolio contact from ${name}`);
-  const mailBody    = encodeURIComponent(
-    `Hi Mahad,\n\n${msg}\n\nBest,\n${name}\n${email}`
-  );
-  const mailto = `mailto:your.email@example.com?subject=${mailSubject}&body=${mailBody}`;
+  const mailBody    = encodeURIComponent(`Hi Mahad,\n\n${msg}\n\nBest,\n${name}\n${email}`);
+  const mailto = `mailto:mahadahmad28@gmail.com?subject=${mailSubject}&body=${mailBody}`;
 
   btn.disabled = true;
   btn.textContent = 'Opening mail client…';
-
-  // Attempt to open mail client
   window.location.href = mailto;
 
   setTimeout(() => {
-    note.textContent = '✓ Mail client opened! Replace the email in contact.html with your real address.';
+    note.textContent = '✓ Mail client opened!';
     note.className = 'form-note success';
     form.reset();
     btn.disabled = false;
-    btn.innerHTML = 'Send Message <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m22 2-7 20-4-9-9-4 20-7z"/></svg>';
+    btn.innerHTML = 'Send Message <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m22 2-7 20-4-9-9-4 20-7z"/></svg>';
   }, 1000);
 }
-
-// Make globally accessible
 window.handleContactForm = handleContactForm;
 
 
-/* ── 7. Smooth parallax on hero orbs (subtle) ── */
-window.addEventListener('mousemove', (e) => {
-  const orbs = document.querySelectorAll('.hero-orb');
-  const { innerWidth: w, innerHeight: h } = window;
-  const xPct = (e.clientX / w - 0.5);
-  const yPct = (e.clientY / h - 0.5);
-
-  orbs.forEach((orb, i) => {
-    const factor = (i + 1) * 15;
-    orb.style.transform = `translate(${xPct * factor}px, ${yPct * factor}px)`;
+/* ── 6. Copy email on click ──────────────────── */
+const emailCard = document.getElementById('contact-email');
+if (emailCard) {
+  emailCard.addEventListener('click', () => {
+    navigator.clipboard?.writeText('mahadahmad28@gmail.com').catch(() => {});
   });
-}, { passive: true });
+}
 
 
-/* ── 8. Terminal animation (VulnHawk mock) ──── */
+/* ── 7. Terminal animation ───────────────────── */
 function animateTerminal() {
   const lines = document.querySelectorAll('.terminal-line');
   lines.forEach((line, i) => {
     line.style.opacity = '0';
-    line.style.transition = 'opacity 0.3s ease';
-    setTimeout(() => {
-      line.style.opacity = '1';
-    }, 400 + i * 300);
+    line.style.transition = 'opacity 0.28s ease';
+    setTimeout(() => { line.style.opacity = '1'; }, 350 + i * 260);
   });
 }
 
-// Re-run terminal animation when visible
 const terminal = document.querySelector('.terminal-window');
 if (terminal) {
   const termObs = new IntersectionObserver(entries => {
     entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        animateTerminal();
-        termObs.unobserve(terminal);
-      }
+      if (entry.isIntersecting) { animateTerminal(); termObs.unobserve(terminal); }
     });
   }, { threshold: 0.5 });
   termObs.observe(terminal);
 }
 
 
-/* ── 9. Copy email on click ─────────────────── */
-const emailCard = document.getElementById('contact-email');
-if (emailCard) {
-  emailCard.addEventListener('click', (e) => {
-    // Still open mailto, but also copy to clipboard
-    navigator.clipboard?.writeText('your.email@example.com').catch(() => {});
-  });
-}
-
-
-/* ── 10. Page load animation ─────────────────── */
+/* ── 8. Page load fade-in ────────────────────── */
 document.addEventListener('DOMContentLoaded', () => {
   document.body.style.opacity = '0';
-  document.body.style.transition = 'opacity .4s ease';
-  requestAnimationFrame(() => {
-    document.body.style.opacity = '1';
-  });
+  document.body.style.transition = 'opacity 0.35s ease';
+  requestAnimationFrame(() => { document.body.style.opacity = '1'; });
 });
